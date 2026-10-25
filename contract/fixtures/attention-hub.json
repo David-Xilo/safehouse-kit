@@ -1,0 +1,23 @@
+{
+  "items": [
+    {
+      "uid": "inc-0000000000000001",
+      "title": "3 findings, agt pkg per, under bash",
+      "module": "safehouse-hub",
+      "severity_id": 4,
+      "status_id": 1,
+      "first_seen": "2099-01-02T12:00:00Z",
+      "last_seen": "2099-01-02T12:09:30.5Z",
+      "count": 3,
+      "entities": [
+        { "kind": "finding", "id": "agent-guard/agt-0000000000000001" },
+        { "kind": "finding", "id": "pkg-guard/pkg-0000000000000002" },
+        { "kind": "finding", "id": "persist-watch/0b6f2d8e-0000-5000-8000-000000000004" },
+        { "kind": "process", "id": "0b6f2d8e-0000-5000-8000-000000000002", "label": "bash" },
+        { "kind": "session", "id": "00000000-0000-4000-8000-000000000005" },
+        { "kind": "kernel_session", "id": "4100" }
+      ]
+    }
+  ],
+  "next_cursor": null
+}

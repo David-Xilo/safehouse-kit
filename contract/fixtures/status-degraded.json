@@ -1,0 +1,18 @@
+{
+  "contract_version": "0.1",
+  "module": "traffic-sniffer",
+  "version": "0.1.0",
+  "state": "degraded",
+  "reason": "ring buffer drops in the last minute; AI provider unreachable",
+  "since": "2026-09-27T12:05:00Z",
+  "last_event_time": "2026-09-27T12:06:10Z",
+  "counts": { "events": 48999, "alerts": 2 },
+  "drops": 1532,
+  "queue_depth": null,
+  "store": { "bytes": 74000000, "events": null },
+  "ai": {
+    "mode": "jev",
+    "provider_state": "down",
+    "budget": { "used": null, "cap": 200, "unit": "calls", "window": "day" }
+  }
+}

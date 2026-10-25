@@ -1,0 +1,20 @@
+# An example daemon manifest with a command that carries a JSON body and a title. The
+# body's shape is the module's own (`NewNote` in its OpenAPI), never the contract's.
+contract_version = "0.1"
+name = "lifelog-notes"
+code = "LFE"
+version = "0.1.0"
+kind = "daemon"
+language = "python"
+description = "Notes and dated reminders in an Obsidian vault"
+service_unit = "lifelog-notes.service"
+base_url = "http://127.0.0.1:7804"
+openapi_url = "http://127.0.0.1:7804/openapi.json"
+console_route = "/life"
+
+[commands.note-add]
+tier = "safe"
+title = "Add note"
+description = "Create a note; never writes over an existing file"
+route = { method = "POST", path = "/notes" }
+body = "json"

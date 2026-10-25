@@ -1,0 +1,38 @@
+# An example batch manifest with commands of every tier but `typed`. `purge` is
+# `cli`: the console shows it to copy, and the gateway never runs it.
+contract_version = "0.1"
+name = "mop"
+code = "CLN"
+version = "0.1.0"
+kind = "batch"
+language = "go"
+description = "Cleanup: plan, review by the user, then Trash"
+status_command = ["mop", "status", "--json"]
+console_route = "/mop"
+
+[read_commands]
+runs = ["mop", "runs", "--json"]
+
+[commands.apply]
+tier = "confirm"
+description = "Move a reviewed plan's approved items to the Trash"
+argv = ["mop", "apply", "{plan}"]
+
+[commands.apply.params.plan]
+pattern = "^/[^\\n]+\\.toml$"
+
+[commands.restore]
+tier = "confirm"
+description = "Restore a run's items from the Trash"
+argv = ["mop", "restore", "{run}"]
+
+[commands.restore.params.run]
+pattern = "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{6}Z$"
+
+[commands.purge]
+tier = "cli"
+description = "Empty mop's Trash entries older than a number of days"
+argv = ["mop", "purge", "--older-than", "{days}"]
+
+[commands.purge.params.days]
+pattern = "^[0-9]{1,4}$"

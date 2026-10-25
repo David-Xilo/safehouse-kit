@@ -1,0 +1,18 @@
+{
+  "contract_version": "0.1",
+  "module": "librarian",
+  "version": "0.1.0",
+  "state": "waiting",
+  "last_run": {
+    "id": "2026-09-27T09-00-00Z",
+    "started": "2026-09-27T09:00:00Z",
+    "finished": "2026-09-27T09:41:12Z",
+    "outcome": "succeeded",
+    "cost_usd": 2.88,
+    "record": "data/runs/2026-09-27T09-00-00Z.jsonl"
+  },
+  "waiting": [
+    { "what": "strategy notes", "why": "written, waiting for run --apply", "count": 8 },
+    { "what": "concept pages", "why": "per-run cap of 30 reached", "count": 211 }
+  ]
+}

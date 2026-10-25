@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://safehouse.local/contract/0.1/attention.schema.json",
+  "title": "Attention items (an attention read command, or GET /attention)",
+  "description": "One page of things a module asks the user to look at, for the console's Attention view. Severity comes only from the module: without severity_id an item is 'review', unranked.",
+  "type": "object",
+  "required": ["items", "next_cursor"],
+  "additionalProperties": false,
+  "$defs": {
+    "time": { "type": "string", "format": "date-time", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,9})?Z$" },
+    "item": {
+      "type": "object",
+      "required": ["uid", "title", "module"],
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "description": "Stable within the module, e.g. the finding's finding_info.uid" },
+        "title": { "type": "string", "minLength": 1, "description": "Short; no secrets or payloads" },
+        "module": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$", "description": "The writing module's repository name" },
+        "severity_id": { "enum": [0, 1, 2, 3, 4, 5, 6, 99, null], "description": "OCSF severity_id" },
+        "status_id": { "enum": [0, 1, 2, 3, 4, 5, 6, 99, null], "description": "OCSF Detection Finding status_id: Unknown, New, In Progress, Suppressed, Resolved, Archived, Deleted, Other" },
+        "first_seen": { "$ref": "#/$defs/time" },
+        "last_seen": { "$ref": "#/$defs/time" },
+        "count": { "type": "integer", "minimum": 1 },
+        "entities": {
+          "type": "array",
+          "description": "What the item is about, for links in the console",
+          "items": {
+            "type": "object",
+            "required": ["kind", "id"],
+            "additionalProperties": false,
+            "properties": {
+              "kind": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$", "description": "e.g. process (process.uid), event (metadata.uid), session (an agent session), kernel_session (process.session.uid), finding (<module>/<uid>), file, package, host" },
+              "id": { "type": "string", "minLength": 1 },
+              "label": { "type": "string", "minLength": 1 }
+            },
+            "if": { "properties": { "kind": { "const": "finding" } } },
+            "then": { "properties": { "id": { "pattern": "^[a-z][a-z0-9-]*/.+$" } } }
+          }
+        }
+      }
+    }
+  },
+  "properties": {
+    "items": { "type": "array", "items": { "$ref": "#/$defs/item" } },
+    "next_cursor": { "type": ["string", "null"], "minLength": 1 }
+  }
+}

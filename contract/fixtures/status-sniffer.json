@@ -1,0 +1,17 @@
+{
+  "contract_version": "0.1",
+  "module": "traffic-sniffer",
+  "version": "0.1.0",
+  "state": "ok",
+  "since": "2026-09-27T08:00:00Z",
+  "last_event_time": "2026-09-27T12:00:00.123456789Z",
+  "counts": { "events": 48210, "processes": 3120, "flows": 9544, "alerts": 0 },
+  "drops": 0,
+  "queue_depth": 3,
+  "store": { "bytes": 73400320, "events": 48210 },
+  "ai": {
+    "mode": "off",
+    "provider_state": "unused",
+    "budget": null
+  }
+}

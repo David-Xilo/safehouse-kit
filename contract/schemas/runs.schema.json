@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://safehouse.local/contract/0.1/runs.schema.json",
+  "title": "Runs (a batch tool's runs read command)",
+  "description": "The shape every runs document shares, for the console's run history. Each module adds its own fields and documents them in its own schema.",
+  "type": "object",
+  "required": ["module", "runs"],
+  "$defs": {
+    "time": { "type": ["string", "null"], "format": "date-time", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,9})?Z$" }
+  },
+  "properties": {
+    "module": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "runs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "started", "finished", "outcome"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "started": { "$ref": "#/$defs/time", "description": "null only when a run is queued and has not started" },
+          "finished": { "$ref": "#/$defs/time", "description": "null while running" },
+          "outcome": { "enum": ["running", "succeeded", "failed", "waiting", "cancelled"] },
+          "cost_usd": { "type": ["number", "null"], "minimum": 0, "description": "null when unknown, never 0 for unknown" },
+          "record": { "type": "string", "minLength": 1, "description": "Path of the run's record on disk" }
+        }
+      }
+    }
+  }
+}

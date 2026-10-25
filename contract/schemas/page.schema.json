@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://safehouse.local/contract/0.1/page.schema.json",
+  "title": "List page (any list endpoint)",
+  "description": "One page of a list. Pass next_cursor back as cursor until it is null. Items are the module's own shape, typed in its OpenAPI document.",
+  "type": "object",
+  "required": ["items", "next_cursor"],
+  "additionalProperties": false,
+  "properties": {
+    "items": { "type": "array" },
+    "next_cursor": { "type": ["string", "null"], "minLength": 1 }
+  }
+}

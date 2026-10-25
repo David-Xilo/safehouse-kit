@@ -1,0 +1,13 @@
+# HELP sniff_build_info Build information; the value is always 1.
+# TYPE sniff_build_info gauge
+sniff_build_info{version="0.1.0",contract_version="0.1"} 1
+# HELP sniff_events_total Events written to the store.
+# TYPE sniff_events_total counter
+sniff_events_total{class_uid="1007"} 31020
+sniff_events_total{class_uid="4001"} 17190
+# HELP sniff_drops_total Events lost before the store (ring buffer or queue).
+# TYPE sniff_drops_total counter
+sniff_drops_total 0
+# HELP sniff_store_bytes Size of the event store on disk.
+# TYPE sniff_store_bytes gauge
+sniff_store_bytes 73400320

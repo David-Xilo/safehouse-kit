@@ -1,0 +1,21 @@
+{
+  "items": [
+    {
+      "uid": "pkg-0123456789abcdef0123456789abcdef",
+      "title": "Known malicious package requested: npm example-pkg 1.0.0",
+      "module": "pkg-guard",
+      "severity_id": 5,
+      "first_seen": "2099-01-02T08:00:00Z",
+      "last_seen": "2099-01-02T08:00:00Z",
+      "count": 1,
+      "entities": [{ "kind": "package", "id": "npm/example-pkg@1.0.0" }]
+    },
+    {
+      "uid": "pkg-fedcba9876543210fedcba9876543210",
+      "title": "Package install from an unknown registry",
+      "module": "pkg-guard",
+      "severity_id": null
+    }
+  ],
+  "next_cursor": null
+}

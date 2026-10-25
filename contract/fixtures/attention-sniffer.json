@@ -1,0 +1,19 @@
+{
+  "items": [
+    {
+      "uid": "6f0e3c1a-0000-4000-8000-000000000001",
+      "title": "Shell started by a web browser",
+      "module": "traffic-sniffer",
+      "severity_id": 4,
+      "status_id": 1,
+      "first_seen": "2099-01-02T12:00:00.123456789Z",
+      "last_seen": "2099-01-02T12:05:00Z",
+      "count": 3,
+      "entities": [
+        { "kind": "process", "id": "0b6f2d8e-0000-5000-8000-000000000002", "label": "sh" },
+        { "kind": "event", "id": "01890000-0000-7000-8000-000000000003" }
+      ]
+    }
+  ],
+  "next_cursor": "c2"
+}

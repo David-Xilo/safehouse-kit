@@ -1,0 +1,35 @@
+# An example daemon manifest. `mcp_url`, `mcp_operations` and `console_route` illustrate
+# optional fields.
+contract_version = "0.1"
+name = "traffic-sniffer"
+code = "SNIFF"
+version = "0.1.0"
+kind = "daemon"
+language = "rust"
+description = "Host and network visibility: process exec, flows, DNS, TLS, HTTP"
+service_unit = "traffic-sniffer.service"
+base_url = "http://127.0.0.1:7801"
+openapi_url = "http://127.0.0.1:7801/openapi.json"
+mcp_url = "http://127.0.0.1:7801/mcp"
+# The GET operations served as MCP tools: sniff.alerts and sniff.alert.
+mcp_operations = ["alerts", "alert"]
+console_route = "/sniff"
+ocsf_classes = [1007, 4001, 4002, 4003, 2004]
+# Live stream and alert decisions (the sniffer's own API routes).
+stream_url = "ws://127.0.0.1:7801/stream"
+
+[commands.ack]
+tier = "safe"
+description = "Acknowledge an alert"
+route = { method = "POST", path = "/alerts/{uid}/ack" }
+
+[commands.ack.params.uid]
+pattern = "^[0-9a-f-]{36}$"
+
+[commands.fp]
+tier = "confirm"
+description = "Mark an alert a false positive; later alerts of its group close too"
+route = { method = "POST", path = "/alerts/{uid}/fp" }
+
+[commands.fp.params.uid]
+pattern = "^[0-9a-f-]{36}$"

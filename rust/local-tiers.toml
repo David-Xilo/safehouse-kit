@@ -1,0 +1,19 @@
+# The local model behind each tier alias, pinned by the digest that
+# `ollama list` and Ollama's `/api/tags` report; a call refuses a model whose digest or
+# quantization differs. `num_ctx` is the context window each call asks for.
+#
+# Tiers are picked by measurement; a new pin is a core patch. The small and mid tiers are
+# Qwen2.5 7B and 14B, which fit a 16 GiB GPU whole. `local-strong` (24–32B, quantized,
+# fits 16 GiB) has no pin until a measurement picks one.
+
+[local-small]
+model = "qwen2.5:7b"
+digest = "845dbda0ea48ed749caafd9e6037047aa19acfcfd82e704d7ca97d631a0b697e"
+quantization = "Q4_K_M"
+num_ctx = 8192
+
+[local-mid]
+model = "qwen2.5:14b"
+digest = "7cdf5a0187d5c58cc5d369b255592f7841d1c4696d45a8c8a9489440385b22f6"
+quantization = "Q4_K_M"
+num_ctx = 8192

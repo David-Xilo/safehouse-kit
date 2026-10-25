@@ -1,0 +1,37 @@
+{
+  "activity_id": 1,
+  "category_uid": 2,
+  "class_uid": 2004,
+  "type_uid": 200401,
+  "severity_id": 5,
+  "status_id": 1,
+  "is_alert": true,
+  "time": 4070952000000,
+  "time_dt": "2099-01-01T12:00:00Z",
+  "message": "Known-malicious npm package pkg-guard-test-evil was installed with npm install outside the pkg-guard shims",
+  "metadata": {
+    "uid": "01999a6e-2f40-7c3b-9d1e-4a5b6c7d8ea1",
+    "version": "1.9.0",
+    "product": { "name": "pkg-guard", "vendor_name": "safehouse", "version": "0.1.0" },
+    "profiles": ["datetime", "host"],
+    "processed_time": 4070952060000,
+    "processed_time_dt": "2099-01-01T12:01:00Z"
+  },
+  "device": { "type_id": 2, "hostname": "workstation" },
+  "actor": { "process": { "pid": 20410, "uid": "f179c67f-d4a1-541e-9166-2e70e8ddfe30", "name": "npm" } },
+  "finding_info": {
+    "uid": "pkg-0a1b2c3d4e5f60718293a4b5c6d7e8f9",
+    "title": "Known-malicious npm package installed outside the shims: pkg-guard-test-evil",
+    "types": ["malicious-package"]
+  },
+  "malware": [
+    { "uid": "MAL-2099-0001", "name": "npm/pkg-guard-test-evil", "classification_ids": [0], "provider": "OSV (ossf/malicious-packages)" }
+  ],
+  "remediation": { "desc": "Remove the package and check what its install scripts ran; the process is f179c67f-d4a1-541e-9166-2e70e8ddfe30 in traffic-sniffer" },
+  "unmapped": {
+    "pkg": {
+      "tool": "npm", "command": "install", "ecosystem": "npm", "name": "pkg-guard-test-evil",
+      "requested": "", "match": "all", "mal_ids": ["MAL-2099-0001"], "action": "observed"
+    }
+  }
+}

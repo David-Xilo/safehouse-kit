@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://safehouse.local/contract/0.1/error.schema.json",
+  "title": "Error body (any HTTP endpoint)",
+  "description": "The body of every 4xx and 5xx answer: 400 bad parameter, time or cursor; 404 unknown id; 503 store or dependency unavailable; 500 internal. The message is short and never holds payloads. Other fields may follow.",
+  "type": "object",
+  "required": ["error"],
+  "properties": {
+    "error": { "type": "string", "minLength": 1 }
+  }
+}

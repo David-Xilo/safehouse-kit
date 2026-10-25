@@ -1,0 +1,399 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://safehouse.local/contract/0.1/manifest.schema.json",
+  "title": "Module manifest (safehouse.module.toml, after TOML parsing)",
+  "type": "object",
+  "required": [
+    "contract_version",
+    "name",
+    "code",
+    "version",
+    "kind",
+    "language"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "argv": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Run without a shell; an element \"{name}\" is replaced whole by the param name"
+    },
+    "route": {
+      "type": "object",
+      "required": [
+        "method",
+        "path"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "method": {
+          "enum": [
+            "POST",
+            "PUT",
+            "DELETE"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^/",
+          "description": "Relative to base_url; a segment \"{name}\" is replaced whole by the param name"
+        }
+      }
+    },
+    "command": {
+      "type": "object",
+      "required": [
+        "tier"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "tier": {
+          "enum": [
+            "safe",
+            "confirm",
+            "typed",
+            "cli"
+          ],
+          "description": "safe: runs at once; confirm: a dialog first; typed: the user types confirm_param's value; cli: copy only, never run by the gateway"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40,
+          "pattern": "^[^\\x00-\\x1f\\x7f]+$",
+          "description": "The console's button label; the console falls back to the command's name"
+        },
+        "body": {
+          "const": "json",
+          "description": "POST or PUT route commands without an inverse: the call carries a JSON object, passed through unchanged and typed by the module's OpenAPI"
+        },
+        "argv": {
+          "$ref": "#/$defs/argv"
+        },
+        "route": {
+          "$ref": "#/$defs/route"
+        },
+        "params": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/param"
+          }
+        },
+        "preview": {
+          "description": "A read-only dry run, in the same form as the command's target",
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "argv"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "argv": {
+                  "$ref": "#/$defs/argv"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "route"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "route": {
+                  "$ref": "#/$defs/route"
+                }
+              }
+            }
+          ]
+        },
+        "inverse": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "description": "Another command in this catalogue that undoes this one"
+        },
+        "confirm_param": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "typed tier: the param whose value the user types to confirm"
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "argv"
+          ],
+          "not": {
+            "required": [
+              "route"
+            ]
+          }
+        },
+        {
+          "required": [
+            "route"
+          ],
+          "not": {
+            "required": [
+              "argv"
+            ]
+          }
+        }
+      ],
+      "if": {
+        "properties": {
+          "tier": {
+            "const": "typed"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "confirm_param"
+        ]
+      },
+      "dependentSchemas": {
+        "body": {
+          "required": [
+            "route"
+          ],
+          "properties": {
+            "route": {
+              "properties": {
+                "method": {
+                  "enum": [
+                    "POST",
+                    "PUT"
+                  ]
+                }
+              }
+            }
+          },
+          "not": {
+            "required": [
+              "inverse"
+            ]
+          }
+        }
+      }
+    },
+    "read": {
+      "type": "object",
+      "required": [
+        "argv",
+        "description"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "argv": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000,
+          "description": "What the read returns and when to use it: the MCP tool's description"
+        }
+      }
+    },
+    "param": {
+      "type": "object",
+      "required": [
+        "pattern"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "pattern": {
+          "type": "string",
+          "minLength": 1,
+          "description": "A regular expression the whole value must match"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  },
+  "properties": {
+    "contract_version": {
+      "const": "0.1"
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Repository name"
+    },
+    "code": {
+      "type": "string",
+      "pattern": "^[A-Z]{2,5}$",
+      "description": "The module's short upper-case code, e.g. SNIFF"
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "kind": {
+      "enum": [
+        "daemon",
+        "batch"
+      ]
+    },
+    "language": {
+      "enum": [
+        "rust",
+        "go",
+        "python",
+        "typescript",
+        "c",
+        "cpp"
+      ]
+    },
+    "description": {
+      "type": "string"
+    },
+    "service_unit": {
+      "type": "string",
+      "pattern": "\\.(service|timer)$"
+    },
+    "base_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "openapi_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "mcp_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "mcp_operations": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*$"
+      },
+      "description": "Daemons: the operationIds of the GET operations in openapi_url that the gateway serves as MCP tools <code>.<operationId>. An operation not listed is never a tool"
+    },
+    "stream_url": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^wss?://",
+      "description": "Daemons: the live stream, a WebSocket at <base_url>/stream (contract README, Live streams)"
+    },
+    "console_route": {
+      "type": "string",
+      "pattern": "^/"
+    },
+    "status_command": {
+      "description": "Batch tools: the command that prints status --json, as an argv array (preferred) or a string",
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      ]
+    },
+    "ocsf_classes": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1000,
+        "maximum": 9999
+      },
+      "uniqueItems": true
+    },
+    "read_commands": {
+      "type": "object",
+      "description": "Named read-only commands, each run without a shell and printing one JSON document; served by the gateway at /m/{module}/read/{name}. A described read is also the gateway's MCP tool <code>.<name>",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9-]*$"
+      },
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/argv"
+          },
+          {
+            "$ref": "#/$defs/read"
+          }
+        ]
+      }
+    },
+    "commands": {
+      "type": "object",
+      "description": "Commands the module offers through the gateway, by name. Declared only; the gateway passes them through and audits them. Placeholder rules the schema cannot check are in the contract README",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9-]*$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/command"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "daemon"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "service_unit",
+          "base_url",
+          "openapi_url"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "batch"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "status_command"
+        ],
+        "not": {
+          "required": [
+            "mcp_operations"
+          ]
+        }
+      }
+    }
+  ]
+}

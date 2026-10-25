@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://safehouse.local/contract/0.1/status.schema.json",
+  "title": "Daemon status (GET /status)",
+  "description": "Small summary for launcher tiles and the gateway overview. A value that is not known is null, never 0.",
+  "type": "object",
+  "required": ["contract_version", "module", "version", "state", "since", "last_event_time", "counts", "drops", "queue_depth", "store", "ai"],
+  "additionalProperties": false,
+  "$defs": {
+    "count": { "type": ["integer", "null"], "minimum": 0 },
+    "time": { "type": ["string", "null"], "format": "date-time", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,9})?Z$" }
+  },
+  "properties": {
+    "contract_version": { "const": "0.1" },
+    "module": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$", "description": "Repository name, equal to metadata.product.name in its events" },
+    "version": { "type": "string", "minLength": 1 },
+    "state": { "enum": ["starting", "ok", "degraded", "down"] },
+    "reason": { "type": ["string", "null"], "description": "Why the state is not ok; short, no payloads" },
+    "since": { "type": "string", "format": "date-time", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,9})?Z$", "description": "When the current state began (UTC)" },
+    "last_event_time": { "$ref": "#/$defs/time" },
+    "counts": {
+      "type": "object",
+      "description": "Module-specific counters, e.g. events, alerts, flows",
+      "additionalProperties": { "$ref": "#/$defs/count" }
+    },
+    "drops": { "$ref": "#/$defs/count" },
+    "queue_depth": { "$ref": "#/$defs/count" },
+    "store": {
+      "type": "object",
+      "required": ["bytes", "events"],
+      "additionalProperties": false,
+      "properties": {
+        "bytes": { "$ref": "#/$defs/count" },
+        "events": { "$ref": "#/$defs/count" }
+      }
+    },
+    "ai": {
+      "type": "object",
+      "required": ["mode", "provider_state", "budget"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": { "enum": ["jev", "local", "off"] },
+        "provider_state": { "enum": ["ok", "degraded", "down", "unused", null] },
+        "budget": {
+          "type": ["object", "null"],
+          "required": ["used", "cap", "unit", "window"],
+          "additionalProperties": false,
+          "properties": {
+            "used": { "type": ["number", "null"], "minimum": 0 },
+            "cap": { "type": ["number", "null"], "minimum": 0 },
+            "unit": { "enum": ["calls", "tokens", "usd"] },
+            "window": { "enum": ["minute", "day", "run"] }
+          }
+        }
+      }
+    }
+  }
+}

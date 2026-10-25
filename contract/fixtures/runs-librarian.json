@@ -1,0 +1,16 @@
+{
+  "runs_version": 1,
+  "module": "librarian",
+  "runs": [
+    {
+      "id": "2099-01-02T113000Z",
+      "use_case": "research",
+      "started": "2099-01-02T11:30:00Z",
+      "finished": "2099-01-02T11:52:10Z",
+      "outcome": "waiting",
+      "failed": null,
+      "steps": [{ "name": "gather", "exit": 0 }, { "name": "write", "exit": 0 }],
+      "cost": { "jev": 0.02, "writer": 0.4, "total": 0.42, "budget_stopped": false }
+    }
+  ]
+}

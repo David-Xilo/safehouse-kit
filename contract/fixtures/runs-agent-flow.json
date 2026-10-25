@@ -1,0 +1,36 @@
+{
+  "runs_version": 1,
+  "module": "agent-flow",
+  "runs": [
+    {
+      "id": "demo/run-1",
+      "kind": "workflow",
+      "project": "demo",
+      "workflow": "planning",
+      "status": "waiting",
+      "outcome": "waiting",
+      "parent": null,
+      "children": ["demo/run-2"],
+      "pending": null,
+      "started": "2099-01-02T09:00:00.000000Z",
+      "finished": null,
+      "cost_usd": null,
+      "eval": null
+    },
+    {
+      "id": "demo/run-2",
+      "kind": "workflow",
+      "project": "demo",
+      "workflow": "render",
+      "status": "blocked",
+      "outcome": "failed",
+      "parent": "demo/run-1",
+      "children": [],
+      "pending": null,
+      "started": "2099-01-02T09:03:00.000000Z",
+      "finished": "2099-01-02T09:04:00.000000Z",
+      "cost_usd": 0.03,
+      "eval": null
+    }
+  ]
+}

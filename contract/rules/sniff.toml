@@ -1,0 +1,55 @@
+# traffic-sniffer rules for secrets in command lines, in gitleaks rule format.
+#
+# gitleaks (rules/gitleaks.toml) targets files. These rules cover how secrets appear in
+# argv, environment assignments, headers and URLs. As in gitleaks, the secret is the
+# first non-empty capture group; quoted values capture only the text inside the quotes.
+
+title = "traffic-sniffer command-line rules"
+
+[[rules]]
+id = "argv-secret-flag"
+description = "Secret passed as a command-line flag value, e.g. --password=x or --api-key x."
+regex = '''(?i)(?:^|[\s"'`(;&|])--?(?:password|passwd|pass|pwd|token|secret|api[-_]?key|access[-_]?key|auth[-_]?token|client[-_]?secret)(?:=|\s+)(?:"([^"]*)"|'([^']*)'|([^\s"']+))'''
+keywords = ["pass", "pwd", "token", "secret", "key"]
+
+[[rules]]
+id = "mysql-password-arg"
+description = "MySQL/MariaDB client password attached to -p. A bare -p prompts and is not a secret, also when a quote follows it (bash -c \"mysql -p\")."
+regex = '''(?:^|[\s/"'`(;&|])(?:mysql|mysqldump|mysqladmin|mysqlimport|mysqlshow|mariadb[\w-]*)\s(?:[^|;&\n]*?\s)?-p(?:"([^"\s][^"]*)"|'([^']*)'|([^\s"']+))'''
+keywords = ["mysql", "mariadb"]
+
+[[rules]]
+id = "sshpass-arg"
+description = "Password given to sshpass -p."
+regex = '''(?:^|[\s/"'`(;&|])sshpass\s(?:[^|;&\n]*?\s)?-p\s*(?:"([^"]*)"|'([^']*)'|([^\s"']+))'''
+keywords = ["sshpass"]
+
+[[rules]]
+id = "env-secret-assignment"
+description = "Environment assignment whose name marks a secret, e.g. TOKEN=x cmd or export DB_PASSWORD=x. An unquoted value ends at a shell separator (; & |)."
+regex = '''(?i)(?:^|[\s;&|(])(?:export\s+)?[a-z0-9_]*(?:password|passwd|token|secret|api_?key|access_?key|credential)[a-z0-9_]*=(?:"([^"]*)"|'([^']*)'|([^\s"';&|]+))'''
+keywords = ["password", "passwd", "token", "secret", "key", "credential"]
+
+[[rules]]
+id = "aws-configure-secret"
+description = "Secret given to aws configure set."
+regex = '''(?:^|[\s/"'`(;&|])aws\s+configure\s+set\s+[\w.]*(?:secret_access_key|session_token)\s+(?:"([^"]*)"|'([^']*)'|([^\s"']+))'''
+keywords = ["aws"]
+
+[[rules]]
+id = "auth-header"
+description = "Credential header value, e.g. curl -H 'Authorization: Bearer x'."
+regex = '''(?i)\b(?:authorization|proxy-authorization|x-api-key|api-key|x-auth-token|cookie)\s*:\s*([^"'\r\n]+)'''
+keywords = ["authorization", "api-key", "auth-token", "cookie"]
+
+[[rules]]
+id = "url-userinfo-password"
+description = "Password in a URL's user information, e.g. scheme://user:secret@host."
+regex = '''(?i)\b[a-z][a-z0-9+.-]*://[^\s/:@'"]+:([^\s/@'"]+)@'''
+keywords = ["://"]
+
+[[rules]]
+id = "url-query-secret"
+description = "URL query parameter whose name marks a secret, e.g. ?access_token=x or &X-Amz-Signature=x (HTTP URLs)."
+regex = '''(?i)[?&][a-z0-9_.-]*(?:password|passwd|pwd|token|secret|api[-_]?key|access[-_]?key|signature|credential)[a-z0-9_.-]*=([^&#\s"']+)'''
+keywords = ["pass", "pwd", "token", "secret", "key", "signature", "credential"]

@@ -1,0 +1,9 @@
+contract_version = "0.1"
+name = "librarian"
+code = "LIB"
+version = "0.1.0"
+kind = "batch"
+language = "python"
+description = "Library and gathered sources turned into verified Obsidian notes"
+status_command = ["librarian", "status", "--json"]
+console_route = "/lib"

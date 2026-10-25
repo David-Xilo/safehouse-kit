@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://safehouse.local/contract/0.1/healthz.schema.json",
+  "title": "Health (GET /healthz)",
+  "description": "HTTP 200 with status ok when the module works; HTTP 503 with status down and a short reason otherwise.",
+  "type": "object",
+  "required": ["status"],
+  "additionalProperties": false,
+  "properties": {
+    "status": { "enum": ["ok", "down"] },
+    "reason": { "type": "string", "minLength": 1 }
+  },
+  "if": { "properties": { "status": { "const": "down" } } },
+  "then": { "required": ["status", "reason"] }
+}

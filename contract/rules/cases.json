@@ -1,0 +1,51 @@
+{
+  "rule_count": 225,
+  "fill": {
+    "password": { "prefix": "P4ss-", "alphabet": "alnum", "length": 10 },
+    "token": { "alphabet": "alnum", "length": 32 },
+    "jwt_body": { "alphabet": "alnum", "length": 40 },
+    "jwt_sig": { "alphabet": "alnum", "length": 43 },
+    "github": { "prefix": "ghp_", "alphabet": "alnum", "length": 36 },
+    "aws_id": { "prefix": "AKIA", "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567", "length": 16 },
+    "aws_secret": { "alphabet": "alnum", "length": 40 },
+    "word1": { "alphabet": "alnum", "length": 12 },
+    "word2": { "alphabet": "alnum", "length": 12 }
+  },
+  "redacted": [
+    ["mysql -u root -p{password} shop", "mysql -u root -p[R] shop"],
+    ["TOKEN={token} ./deploy.sh", "TOKEN=[R] ./deploy.sh"],
+    ["http://api.example.com/v1?user=a&access_token={token}&author=b", "http://api.example.com/v1?user=a&access_token=[R]&author=b"],
+    ["curl -H \"Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ{jwt_body}.{jwt_sig}\" https://api.example.com", "curl -H \"Authorization: [R]\" https://api.example.com"],
+    ["git clone https://alice:{password}@example.com/r.git", "git clone https://alice:[R]@example.com/r.git"],
+    ["psql postgres://app:{password}@db/shop", "psql postgres://app:[R]@db/shop"],
+    ["aws configure set aws_secret_access_key {aws_secret}", "aws configure set aws_secret_access_key [R]"],
+    ["export GITHUB_TOKEN={github}", "export GITHUB_TOKEN=[R]"],
+    ["cli --api-key \"{word1} {word2}\" sync", "cli --api-key \"[R]\" sync"],
+    ["sshpass -p {password} ssh backup@host", "sshpass -p [R] ssh backup@host"],
+    ["./release-tool {github} --draft", "./release-tool [R] --draft"],
+    ["echo {aws_id}", "echo [R]"],
+    ["echo café{aws_id}", "echo café[R]"],
+    ["bash -c \"mysql -uroot -p{password} shop\"", "bash -c \"mysql -uroot -p[R] shop\""],
+    ["x=`sshpass -p {password} ssh h`", "x=`sshpass -p [R] ssh h`"],
+    ["cd /tmp;mysql -uroot -p{password} db && true", "cd /tmp;mysql -uroot -p[R] db && true"],
+    ["true&&/usr/local/bin/aws configure set aws_secret_access_key {aws_secret}", "true&&/usr/local/bin/aws configure set aws_secret_access_key [R]"],
+    ["sh -c '--password={password}'", "sh -c '--password=[R]'"],
+    ["echo $(aws configure set aws_secret_access_key {aws_secret})", "echo $(aws configure set aws_secret_access_key [R]"]
+  ],
+  "exact": [
+    ["mysql -u root -pHunter2x shop", "mysql -u root -p[REDACTED:mysql-password-arg] shop"]
+  ],
+  "unchanged": [
+    "bash -c \"mysql -uroot -p\" && echo \"done\"",
+    "ssh -p 2222 host",
+    "docker run -p 8080:80 nginx",
+    "cargo test -p sniff-core",
+    "git commit -m \"fix password reset flow\"",
+    "grep -r token src/",
+    "kubectl get secret my-secret",
+    "app --password-file /run/secrets/db",
+    "mysql -p shop",
+    "ls -la /home/alice",
+    "curl -fsSL https://example.com/install.sh"
+  ]
+}
