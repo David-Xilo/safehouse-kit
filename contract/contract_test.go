@@ -61,6 +61,12 @@ func TestEveryFixtureMatchesItsSchema(t *testing.T) {
 		if err := s(t, schema).Validate(data); err != nil {
 			t.Errorf("%s against %s: %v", name, schema, err)
 		}
+		// A finding also meets the contract's own clauses: a rule key, at most one label.
+		if strings.HasPrefix(name, "ocsf-detection-finding-") {
+			if err := schematest.Contract(t, "finding.schema.json").Validate(data); err != nil {
+				t.Errorf("%s against finding.schema.json: %v", name, err)
+			}
+		}
 		checked++
 	}
 	if checked < 20 {

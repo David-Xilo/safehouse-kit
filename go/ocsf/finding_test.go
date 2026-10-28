@@ -17,7 +17,8 @@ func TestNewFindingValidatesAsOCSF2004(t *testing.T) {
 		NewMetadata("example-guard", "0.1.0", []string{"datetime", "host"}, at.Add(time.Minute)),
 		Device{TypeID: DeviceDesktop, Hostname: "workstation"},
 		at, SeverityHigh,
-		FindingInfo{UID: "ex-1", Title: "Example finding", Types: []string{"example"}},
+		FindingInfo{UID: "ex-1", Title: "Example finding", Types: []string{"example"},
+			Analytic: &Analytic{TypeID: AnalyticRule, UID: "ex.rule", Name: "Example rule"}},
 	)
 	f.IsAlert = true
 	f.Actor = &Actor{Process: &Process{PID: 4242, Name: "sh", CmdLine: "sh -c true"}}
@@ -62,5 +63,50 @@ func TestPkgGuardFindingRoundTrips(t *testing.T) {
 	_ = json.Unmarshal(out, &got)
 	if !reflect.DeepEqual(want, got) {
 		t.Errorf("round trip changed the event:\n%s", out)
+	}
+}
+
+// Every finding names its rule and carries at most one label from the vocabulary; the
+// contract's finding schema fails one that does not, while the OCSF export alone lets
+// it through.
+func TestFindingNamesItsRule(t *testing.T) {
+	at := time.Date(2099, 1, 1, 12, 0, 0, 0, time.UTC)
+	f := NewFinding(
+		NewMetadata("example-guard", "0.1.0", []string{"datetime", "host"}, at),
+		Device{TypeID: DeviceDesktop, Hostname: "workstation"},
+		at, SeverityMedium,
+		FindingInfo{UID: "ex-1", Title: "Example finding", Analytic: &Analytic{TypeID: AnalyticRule, UID: "ex.rule"}},
+	)
+	ocsf := schematest.OCSF(t, "detection_finding.schema.json")
+	contractSchema := schematest.Contract(t, "finding.schema.json")
+	for _, label := range []string{"", LabelBenign, LabelReal, LabelRoutine, LabelTest} {
+		g := f
+		if label != "" {
+			g.Metadata.Labels = []string{label}
+		}
+		data, _ := json.Marshal(g)
+		if err := ocsf.Validate(data); err != nil {
+			t.Errorf("label %q, OCSF: %v", label, err)
+		}
+		if err := contractSchema.Validate(data); err != nil {
+			t.Errorf("label %q, contract: %v", label, err)
+		}
+	}
+	for name, change := range map[string]func(*DetectionFinding){
+		"no analytic":       func(g *DetectionFinding) { g.FindingInfo.Analytic = nil },
+		"no rule key":       func(g *DetectionFinding) { g.FindingInfo.Analytic = &Analytic{TypeID: AnalyticRule} },
+		"a spaced rule key": func(g *DetectionFinding) { g.FindingInfo.Analytic = &Analytic{TypeID: AnalyticRule, UID: "ex rule"} },
+		"an unknown label":  func(g *DetectionFinding) { g.Metadata.Labels = []string{"resolved"} },
+		"two labels":        func(g *DetectionFinding) { g.Metadata.Labels = []string{LabelRoutine, LabelTest} },
+	} {
+		g := f
+		change(&g)
+		data, _ := json.Marshal(g)
+		if contractSchema.Validate(data) == nil {
+			t.Errorf("%s: the contract accepted\n%s", name, data)
+		}
+		if name == "no analytic" && ocsf.Validate(data) != nil {
+			t.Errorf("%s: the OCSF export refused it, so the contract adds nothing", name)
+		}
 	}
 }

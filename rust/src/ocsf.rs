@@ -21,6 +21,17 @@ pub mod file_type {
     pub const REGULAR: u8 = 1;
 }
 
+/// The contract's label vocabulary for findings, held in `metadata.labels`: at most one
+/// per event, and the finding's label is the one on its newest event. `BENIGN` and `REAL`
+/// come only from the user's decision; `ROUTINE` and `TEST` are set by code when the
+/// finding is raised, and later events of a test finding keep `TEST`.
+pub mod label {
+    pub const BENIGN: &str = "benign";
+    pub const REAL: &str = "real";
+    pub const ROUTINE: &str = "routine";
+    pub const TEST: &str = "test";
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum EventError {
     #[error("cannot decode event: {0}")]
@@ -111,6 +122,9 @@ pub struct Metadata {
     pub product: Product,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub profiles: Vec<String>,
+    /// A finding's label, at most one of [`label`]; empty for other events.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub labels: Vec<String>,
 }
 
 impl Metadata {
@@ -122,6 +136,7 @@ impl Metadata {
             version: OCSF_VERSION.to_owned(),
             product,
             profiles: profiles.iter().map(|p| (*p).to_owned()).collect(),
+            labels: Vec::new(),
         }
     }
 }

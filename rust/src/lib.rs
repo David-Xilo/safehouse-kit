@@ -6,7 +6,8 @@
 //!
 //! Features: `openapi` (utoipa schemas), `redact` (the rule loader over
 //! `contract/rules/`), `schema` (validation against `contract/schemas/`), `local-model`
-//! (the Ollama client, [`local`]).
+//! (the Ollama client, [`local`]), `write-token` (the local write token and the console's
+//! session cookie, [`token`]).
 
 pub mod id;
 pub mod jsonl;
@@ -18,3 +19,5 @@ pub mod redact;
 #[cfg(feature = "schema")]
 pub mod schema;
 pub mod status;
+#[cfg(feature = "write-token")]
+pub mod token;

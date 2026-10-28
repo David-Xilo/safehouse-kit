@@ -6,6 +6,8 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
+use crate::ocsf::SeverityId;
+
 /// The contract version every status, batch status and manifest carries.
 pub const CONTRACT_VERSION: &str = "0.1";
 
@@ -98,6 +100,9 @@ pub struct BatchStatus {
     pub state: BatchState,
     pub last_run: Option<LastRun>,
     pub waiting: Vec<Waiting>,
+    /// Printed by a tool that writes findings, empty when it holds none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rule_counts: Option<Vec<RuleCount>>,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
@@ -132,4 +137,53 @@ pub struct Waiting {
     pub why: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub count: Option<u64>,
+}
+
+/// The label column of findings that have no label.
+pub const LABEL_NONE: &str = "none";
+
+/// One row of per-rule counts: the findings of one rule first raised on one UTC day, at
+/// one severity, that carry one label now. A batch tool prints them as `rule_counts`; a
+/// daemon serves them in `/metrics` with [`rule_findings_metric`].
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
+#[serde(deny_unknown_fields)]
+pub struct RuleCount {
+    /// The rule key, `finding_info.analytic.uid`.
+    pub rule: String,
+    /// `YYYY-MM-DD`, UTC.
+    pub day: String,
+    /// When the finding was raised.
+    pub severity_id: SeverityId,
+    /// One of [`crate::ocsf::label`], or [`LABEL_NONE`].
+    pub label: String,
+    pub count: u64,
+}
+
+/// The `<prefix>_rule_findings` gauge in Prometheus text, one sample per row. With no
+/// rows it is declared with no sample.
+pub fn rule_findings_metric(prefix: &str, rows: &[RuleCount]) -> String {
+    let mut out = format!(
+        "# HELP {prefix}_rule_findings Findings by rule key, UTC day first raised, severity at creation and current label.\n\
+         # TYPE {prefix}_rule_findings gauge\n"
+    );
+    for r in rows {
+        out.push_str(&format!(
+            "{prefix}_rule_findings{{rule=\"{}\",day=\"{}\",severity_id=\"{}\",label=\"{}\"}} {}\n",
+            escape(&r.rule),
+            escape(&r.day),
+            r.severity_id as u8,
+            escape(&r.label),
+            r.count,
+        ));
+    }
+    out
+}
+
+/// A Prometheus label value: backslash, double quote and line feed escaped.
+fn escape(value: &str) -> String {
+    value
+        .replace('\\', "\\\\")
+        .replace('"', "\\\"")
+        .replace('\n', "\\n")
 }

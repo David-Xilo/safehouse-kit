@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://safehouse.local/contract/0.1/finding.schema.json",
+  "title": "Finding (the contract's clauses on an OCSF finding)",
+  "description": "What the contract adds to every finding a module writes: a rule key and at most one label. A finding also validates against its class's OCSF export; this schema checks only the contract's clauses and lets every other field through.",
+  "type": "object",
+  "required": ["class_uid", "metadata", "finding_info"],
+  "$defs": {
+    "rule": {
+      "type": "string",
+      "pattern": "^[!#-\\[\\]-~]{1,200}$",
+      "description": "The rule key: printable ASCII without spaces, double quotes or backslashes, 1 to 200 characters. It names the rule, never one finding, and holds no captured data"
+    }
+  },
+  "properties": {
+    "class_uid": {
+      "type": "integer",
+      "minimum": 2000,
+      "maximum": 2999,
+      "description": "An OCSF Findings class. Incident Finding (2005) has no finding_info and is not checked here"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "labels": {
+          "type": "array",
+          "maxItems": 1,
+          "items": { "enum": ["benign", "real", "routine", "test"] },
+          "description": "The finding's label, when it has one: benign or real from the user's decision, routine or test from code at creation"
+        }
+      }
+    },
+    "finding_info": {
+      "type": "object",
+      "required": ["analytic"],
+      "properties": {
+        "analytic": {
+          "type": "object",
+          "required": ["type_id", "uid"],
+          "properties": {
+            "uid": { "$ref": "#/$defs/rule" }
+          }
+        }
+      }
+    }
+  }
+}

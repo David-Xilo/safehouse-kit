@@ -11,3 +11,8 @@ sniff_drops_total 0
 # HELP sniff_store_bytes Size of the event store on disk.
 # TYPE sniff_store_bytes gauge
 sniff_store_bytes 73400320
+# HELP sniff_rule_findings Findings by rule key, UTC day first raised, severity at creation and current label.
+# TYPE sniff_rule_findings gauge
+sniff_rule_findings{rule="baseline:exe",day="2099-01-01",severity_id="2",label="routine"} 14
+sniff_rule_findings{rule="baseline:exe",day="2099-01-01",severity_id="2",label="none"} 3
+sniff_rule_findings{rule="baseline:exe",day="2099-01-01",severity_id="2",label="benign"} 1

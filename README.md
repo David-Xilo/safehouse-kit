@@ -6,14 +6,15 @@ findings into incidents, and a gateway serves every module to one local console.
 holds what those modules share, for every language:
 
 - the **module contract**: the event envelope, `status`, `healthz`, batch status, the
-  manifest with its commands, attention items, runs, live streams and MCP tools, with
+  manifest with its commands, attention items, runs, live streams and MCP tools, and the
+  rule key and labels every finding carries, with
   JSON Schemas and synthetic golden fixtures, in [`contract/`](contract/README.md);
 - small **Go** and **Rust** packages for the code that modules would otherwise copy.
 
 Using the packages is optional. A module in any language meets the contract through
 files, HTTP and schemas, and proves it against the fixtures here.
 
-Current tag: `v0.8.1`. Contract version: `0.1`.
+Current tag: `v0.10.1`. Contract version: `0.1`.
 
 ## What is here
 
@@ -21,8 +22,8 @@ Current tag: `v0.8.1`. Contract version: `0.1`.
 |---|---|
 | `contract/` | Contract README, `schemas/`, `fixtures/`; `rules/` (redaction rules, ours and gitleaks', with `cases.json`); `ocsf/` (OCSF 1.9.0 exports); `ids/` (`process-uid.json` cases) |
 | `contract` (Go) | `Version` and the embedded schemas and fixtures |
-| `go/ocsf` | OCSF envelope (`Product`, `Metadata`, `Device`, `NewUID`) and Detection Finding 2004 |
-| `go/batch`, `go/utc` | Batch status types; RFC 3339 UTC time |
+| `go/ocsf` | OCSF envelope (`Product`, `Metadata`, `Device`, `NewUID`), Detection Finding 2004 with its rule key (`Analytic`), and the label words |
+| `go/batch`, `go/utc` | Batch status types and per-rule counts (`RuleTally`); RFC 3339 UTC time |
 | `go/redact` | Redaction over `contract/rules/` (`Load`, `Text`, `IDs`) |
 | `go/schematest` | Schema checks for tests |
 | `go/jev` | A client for TypeSafe's Jev (Noul, Score and Choice questions) with retries and an HTTP/2 ping |
@@ -32,7 +33,10 @@ Current tag: `v0.8.1`. Contract version: `0.1`.
 Rust features: `openapi` (utoipa `ToSchema` on the envelope and status types), `redact`
 (`redact::Redactor` over `contract/rules/`), `schema` (`schema::check` against
 `contract/schemas/`), `local-model` (`local::Client`: one schema-checked chat with a
-model on Ollama at a loopback address, pinned by digest in `rust/local-tiers.toml`).
+model on Ollama at a loopback address, pinned by digest in `rust/local-tiers.toml`),
+`write-token` (`token::WriteToken`: loads the local write token from a file only its
+owner can read, checks a write's `Authorization: Bearer` header in constant time, and
+signs and checks the console's HttpOnly, SameSite=Strict session cookie with it).
 
 ## Using it from Go
 
@@ -65,7 +69,7 @@ package is named `safehouse-core`.
 
 ```toml
 [dependencies]
-safehouse-core = { git = "https://github.com/David-Xilo/safehouse-kit", tag = "v0.8.1", features = ["redact"] }
+safehouse-core = { git = "https://github.com/David-Xilo/safehouse-kit", tag = "v0.10.1", features = ["redact"] }
 ```
 
 ```rust
@@ -89,7 +93,9 @@ line per tag.
 Nothing of its own: the kit is a library that installs nothing and runs nothing. What a
 caller does with it leaves the host only through that caller: `go/jev` posts to the Jev
 base URL the caller gives, with the key the caller gives, and the local-model client
-talks only to Ollama on a loopback address. The packages never read or log a key.
+talks only to Ollama on a loopback address. The packages never read or log a key, except
+the write token, which `token::WriteToken` reads from the file the caller names and never
+prints.
 
 ## Checks
 

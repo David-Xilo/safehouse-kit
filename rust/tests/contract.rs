@@ -3,9 +3,11 @@
 
 use std::path::Path;
 
-use safehouse_core::ocsf::{Metadata, OCSF_VERSION, Product};
+use safehouse_core::ocsf::{Metadata, OCSF_VERSION, Product, SeverityId, label};
 use safehouse_core::schema::{self, Schema};
-use safehouse_core::status::{BatchStatus, DaemonStatus};
+use safehouse_core::status::{
+    BatchStatus, DaemonStatus, LABEL_NONE, RuleCount, rule_findings_metric,
+};
 use serde_json::Value;
 
 /// A fixture's file-name prefix and its schema; longer prefixes first.
@@ -49,6 +51,14 @@ fn every_fixture_matches_its_schema() {
         let doc = read_fixture(&name);
         let errors = schema::errors(*schema, &doc);
         assert!(errors.is_empty(), "{name}: {errors:?}");
+        // A finding also meets the contract's own clauses: a rule key, at most one label.
+        if *schema == Schema::OcsfDetectionFinding {
+            let errors = schema::errors(Schema::Finding, &doc);
+            assert!(
+                errors.is_empty(),
+                "{name} against the finding clauses: {errors:?}"
+            );
+        }
         checked += 1;
     }
     assert!(
@@ -250,9 +260,107 @@ fn status_types_round_trip_the_fixtures() {
         let typed: DaemonStatus = serde_json::from_value(doc.clone()).unwrap();
         assert!(same(&serde_json::to_value(typed).unwrap(), &doc), "{name}");
     }
-    let doc = read_fixture("batch-status-librarian.json");
-    let typed: BatchStatus = serde_json::from_value(doc.clone()).unwrap();
-    assert!(same(&serde_json::to_value(typed).unwrap(), &doc));
+    for name in ["batch-status-librarian.json", "batch-status-pkg-guard.json"] {
+        let doc = read_fixture(name);
+        let typed: BatchStatus = serde_json::from_value(doc.clone()).unwrap();
+        assert!(same(&serde_json::to_value(typed).unwrap(), &doc), "{name}");
+    }
+}
+
+/// The finding clauses fail a finding without a rule key or with a label outside the
+/// vocabulary, which the OCSF export alone lets through.
+#[test]
+fn a_finding_names_its_rule() {
+    let finding = read_fixture("ocsf-detection-finding-pkg-guard.json");
+    for word in [label::BENIGN, label::REAL, label::ROUTINE, label::TEST] {
+        let mut doc = finding.clone();
+        doc["metadata"]["labels"] = serde_json::json!([word]);
+        assert_eq!(schema::check(Schema::Finding, &doc), None, "{word}");
+    }
+    let mut unlabelled = finding.clone();
+    unlabelled["metadata"]
+        .as_object_mut()
+        .unwrap()
+        .remove("labels");
+    assert_eq!(schema::check(Schema::Finding, &unlabelled), None);
+
+    let change = |path: &[&str], value: Option<Value>| {
+        let mut doc = finding.clone();
+        let (last, parents) = path.split_last().unwrap();
+        let parent = parents.iter().fold(&mut doc, |v, k| &mut v[*k]);
+        match value {
+            Some(v) => parent[*last] = v,
+            None => {
+                parent.as_object_mut().unwrap().remove(*last);
+            }
+        }
+        doc
+    };
+    let no_analytic = change(&["finding_info", "analytic"], None);
+    assert!(schema::check(Schema::Finding, &no_analytic).is_some());
+    assert_eq!(
+        schema::check(Schema::OcsfDetectionFinding, &no_analytic),
+        None,
+        "the OCSF export alone should accept it"
+    );
+    for bad in [
+        change(&["finding_info", "analytic", "uid"], None),
+        change(&["finding_info", "analytic", "uid"], Some("".into())),
+        change(&["finding_info", "analytic", "uid"], Some("a rule".into())),
+        change(
+            &["metadata", "labels"],
+            Some(serde_json::json!(["resolved"])),
+        ),
+        change(
+            &["metadata", "labels"],
+            Some(serde_json::json!([label::ROUTINE, label::TEST])),
+        ),
+    ] {
+        assert!(
+            schema::check(Schema::Finding, &bad).is_some(),
+            "accepted {bad}"
+        );
+    }
+}
+
+#[test]
+fn rule_counts_as_metrics() {
+    let rows = [
+        RuleCount {
+            rule: "baseline:exe".into(),
+            day: "2099-01-01".into(),
+            severity_id: SeverityId::Low,
+            label: label::ROUTINE.into(),
+            count: 14,
+        },
+        RuleCount {
+            rule: "odd\\\"rule".into(),
+            day: "2099-01-01".into(),
+            severity_id: SeverityId::High,
+            label: LABEL_NONE.into(),
+            count: 1,
+        },
+    ];
+    let text = rule_findings_metric("sniff", &rows);
+    let fixture =
+        std::fs::read_to_string(contract_dir().join("fixtures/metrics-sniffer.txt")).unwrap();
+    let mut lines = text.lines();
+    let declared: Vec<&str> = lines.by_ref().take(3).collect();
+    assert!(
+        declared[..2].iter().all(|l| fixture.contains(l)),
+        "the HELP and TYPE lines differ from the fixture:\n{text}"
+    );
+    assert_eq!(
+        declared[2],
+        r#"sniff_rule_findings{rule="baseline:exe",day="2099-01-01",severity_id="2",label="routine"} 14"#
+    );
+    assert_eq!(
+        lines.next(),
+        Some(
+            r#"sniff_rule_findings{rule="odd\\\"rule",day="2099-01-01",severity_id="4",label="none"} 1"#
+        )
+    );
+    assert_eq!(rule_findings_metric("per", &[]).lines().count(), 2);
 }
 
 #[test]

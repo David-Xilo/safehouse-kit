@@ -38,6 +38,22 @@
           "count": { "type": ["integer", "null"], "minimum": 0 }
         }
       }
+    },
+    "rule_counts": {
+      "type": "array",
+      "description": "Findings per rule key, UTC day of first sight, severity at creation and current label, over the last 30 UTC days, today included. Printed whenever the tool writes findings, empty when it holds none; one row per rule, day, severity_id and label",
+      "items": {
+        "type": "object",
+        "required": ["rule", "day", "severity_id", "label", "count"],
+        "additionalProperties": false,
+        "properties": {
+          "rule": { "type": "string", "pattern": "^[!#-\\[\\]-~]{1,200}$", "description": "The rule key, finding_info.analytic.uid" },
+          "day": { "type": "string", "format": "date", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$", "description": "The UTC day the finding was first raised" },
+          "severity_id": { "enum": [0, 1, 2, 3, 4, 5, 6, 99], "description": "OCSF severity_id when the finding was raised" },
+          "label": { "enum": ["none", "benign", "real", "routine", "test"], "description": "The finding's label now; none when it has none" },
+          "count": { "type": "integer", "minimum": 1 }
+        }
+      }
     }
   }
 }

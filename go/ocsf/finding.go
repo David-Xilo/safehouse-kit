@@ -33,13 +33,37 @@ const (
 	StatusResolved   = 4
 
 	DeviceDesktop = 2
+
+	// AnalyticRule is analytic.type_id 1: Rule.
+	AnalyticRule = 1
+)
+
+// The contract's label vocabulary, held in metadata.labels: at most one per event, and
+// the finding's label is the one on its newest event. LabelBenign and LabelReal come only
+// from the user's decision; LabelRoutine and LabelTest are set by code when the finding
+// is raised, and later events of a test finding keep LabelTest.
+const (
+	LabelBenign  = "benign"
+	LabelReal    = "real"
+	LabelRoutine = "routine"
+	LabelTest    = "test"
 )
 
 type FindingInfo struct {
-	UID   string   `json:"uid"`
-	Title string   `json:"title"`
-	Types []string `json:"types,omitempty"`
-	Desc  string   `json:"desc,omitempty"`
+	UID      string    `json:"uid"`
+	Title    string    `json:"title"`
+	Types    []string  `json:"types,omitempty"`
+	Desc     string    `json:"desc,omitempty"`
+	Analytic *Analytic `json:"analytic,omitempty"`
+}
+
+// Analytic names the rule that raised a finding. UID is the contract's rule key: stable
+// for the rule, never one finding's id, and free of captured data
+// (contract/schemas/finding.schema.json).
+type Analytic struct {
+	TypeID int    `json:"type_id"`
+	UID    string `json:"uid"`
+	Name   string `json:"name,omitempty"`
 }
 
 type Malware struct {

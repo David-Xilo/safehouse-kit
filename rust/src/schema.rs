@@ -19,6 +19,9 @@ pub enum Schema {
     Attention,
     /// A runs read command's document.
     Runs,
+    /// The contract's clauses on any finding: a rule key and at most one label. A
+    /// finding also validates against its class's OCSF export.
+    Finding,
     /// OCSF 1.9.0 Detection Finding (2004), profiles `datetime` and `host`, shared by
     /// every writer of 2004.
     OcsfDetectionFinding,
@@ -39,6 +42,7 @@ impl Schema {
             Schema::Page => include_str!("../../contract/schemas/page.schema.json"),
             Schema::Attention => include_str!("../../contract/schemas/attention.schema.json"),
             Schema::Runs => include_str!("../../contract/schemas/runs.schema.json"),
+            Schema::Finding => include_str!("../../contract/schemas/finding.schema.json"),
             Schema::OcsfDetectionFinding => {
                 include_str!("../../contract/ocsf/detection_finding.schema.json")
             }

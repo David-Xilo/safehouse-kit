@@ -25,6 +25,7 @@ own tools, and conformance is always proved against these schemas and fixtures.
   | Command `title`, `body` | `v0.4.0` |
   | A read command as a table with `argv` and `description` | `v0.6.0` |
   | Manifest `mcp_operations` | `v0.7.0` |
+  | Batch status `rule_counts` | `v0.9.0` |
 
 ## Events
 
@@ -94,6 +95,48 @@ Modules not built yet take their classes when they start, with fixtures: home co
 (CTL) 6003 for commands; vulnerability triage 2002 and 5020; server adapters 4003, 5001
 or 2004.
 
+## Findings
+
+A finding is an event of an OCSF Findings class (2003, 2004, 2006, …) that has
+`finding_info`; the hub's Incident Finding (2005) is not one. Every finding names its
+rule and carries at most one label, so the hub can count and judge each rule the same
+way in every module. Schema: [`finding.schema.json`](schemas/finding.schema.json), which
+checks these clauses only; the finding also validates against its class's OCSF export.
+
+**Rule key.** `finding_info.analytic.uid`, with OCSF's required `analytic.type_id`
+(`1`, Rule, for a written rule):
+- printable ASCII without spaces, double quotes or backslashes, 1 to 200 characters;
+- stable for the rule across versions and runs: it names the rule, never one finding;
+- no captured data: no command line, path, host or payload. An indicator list is one rule
+  or one rule per entry, by the entry's id, never by the indicator itself.
+
+**Labels.** `metadata.labels` holds at most one of four words. A finding's label is the
+one on its newest event; a finding with none is unlabelled.
+
+| Label | Set by | Meaning |
+|---|---|---|
+| `benign` | the user's decision, through the module's own verb (a false-positive mark, an accept, an allow) | expected; nothing to do |
+| `real` | the user's decision, through the module's own verb | it needed action |
+| `routine` | code, when the finding is raised | closed at creation by a written rule for a known benign source |
+| `test` | code, when the finding is raised | raised on purpose by an acceptance script |
+
+- The event a decision writes (an update or close) carries `benign` or `real`. The user
+  may relabel a `routine` finding.
+- `test` is opt-in per finding: the acceptance script asks for it through a switch the
+  module documents (a flag or an environment variable). It is never inferred from the
+  finding, and a check that must prove the real path does not set it. Every later event of
+  a test finding keeps `test`.
+- "Resolved" and "acknowledged" are states, not labels: `status_id` keeps them.
+
+**Per-rule counts.** A module that writes findings counts them per rule key, per UTC day
+of first sight, per `severity_id` at creation and per label now (`none` when
+unlabelled), over the last 30 UTC days, today included. A row has a count of at least 1;
+rows of 0 are left out, and each (rule, day, severity, label) appears once. A batch tool
+prints them as `rule_counts` in `status --json` ([Batch tools](#batch-tools)); a daemon
+serves them as the `<prefix>_rule_findings` gauge in `/metrics`
+([Metrics](#http-endpoints)). Counts hold rule keys and numbers only, so a reader never
+needs captured data to count.
+
 ## HTTP endpoints
 
 Daemons listen on `127.0.0.1` by default. Remote access goes through the gateway.
@@ -128,6 +171,12 @@ All times are RFC 3339 in UTC with a `Z` suffix and up to nine fractional digits
 | `<prefix>_events_total` | counter; may carry a `class_uid` label |
 | `<prefix>_drops_total` | counter |
 | `<prefix>_store_bytes` | gauge |
+
+A daemon that writes findings also serves its [per-rule counts](#findings):
+
+| Metric | Type |
+|---|---|
+| `<prefix>_rule_findings{rule,day,severity_id,label}` | gauge: findings of the rule key first raised on the UTC day (`YYYY-MM-DD`), at that `severity_id`, carrying that label now (`none` when unlabelled) |
 
 A required metric whose value the module does not know is declared (`# HELP` and
 `# TYPE`) with no sample. It is never a `0` sample, as in `status`, where unknown is
@@ -171,6 +220,7 @@ matching [`batch-status.schema.json`](schemas/batch-status.schema.json):
 | `state` | `idle`, `running`, `waiting` or `failed` |
 | `last_run` | `id`, `started`, `finished`, `outcome` (`succeeded`, `failed`, `waiting`, `cancelled`, `running`), `cost_usd` (`null` when unknown), `record` (path of the last-run record on disk); `null` before the first run |
 | `waiting` | A list of `what`, `why` and an optional `count` |
+| `rule_counts` | A tool that writes findings: its [per-rule counts](#findings), a list of `rule`, `day`, `severity_id`, `label` and `count`, empty when it holds none. Optional; see [Versioning](#versioning) |
 
 The command exits 0 when it could report, whatever the state. A batch tool gains
 HTTP endpoints only when the console needs them.
@@ -381,7 +431,10 @@ A module conforms to 0.1 when:
    the schemas in `schemas/`, and a live response does too;
 3. `/metrics` exposes the required metrics;
 4. a daemon's error and list bodies validate against `error.schema.json` and
-   `page.schema.json`.
+   `page.schema.json`;
+5. its finding fixtures validate against `finding.schema.json` as well as their OCSF
+   export, so a finding without a rule key fails, and a module that writes findings
+   serves its per-rule counts.
 
 Each module records its own conformance in its tests and evidence. The fixtures in
 `fixtures/` show valid documents; `go test ./contract/` validates each one against its

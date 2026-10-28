@@ -27,6 +27,7 @@ type Metadata struct {
 	Version         string   `json:"version"`
 	Product         Product  `json:"product"`
 	Profiles        []string `json:"profiles"`
+	Labels          []string `json:"labels,omitempty"` // at most one Label* value
 	ProcessedTime   int64    `json:"processed_time"`
 	ProcessedTimeDT string   `json:"processed_time_dt"`
 }

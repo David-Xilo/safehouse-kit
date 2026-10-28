@@ -14,6 +14,7 @@
     "version": "1.9.0",
     "product": { "name": "pkg-guard", "vendor_name": "safehouse", "version": "0.1.0" },
     "profiles": ["datetime", "host"],
+    "labels": ["test"],
     "processed_time": 4070952060000,
     "processed_time_dt": "2099-01-01T12:01:00Z"
   },
@@ -22,7 +23,8 @@
   "finding_info": {
     "uid": "pkg-0a1b2c3d4e5f60718293a4b5c6d7e8f9",
     "title": "Known-malicious npm package installed outside the shims: pkg-guard-test-evil",
-    "types": ["malicious-package"]
+    "types": ["malicious-package"],
+    "analytic": { "type_id": 1, "uid": "pkg.malicious_package", "name": "Known-malicious package installed" }
   },
   "malware": [
     { "uid": "MAL-2099-0001", "name": "npm/pkg-guard-test-evil", "classification_ids": [0], "provider": "OSV (ossf/malicious-packages)" }

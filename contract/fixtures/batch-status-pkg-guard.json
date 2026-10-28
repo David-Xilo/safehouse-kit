@@ -1,0 +1,20 @@
+{
+  "contract_version": "0.1",
+  "module": "pkg-guard",
+  "version": "0.2.0",
+  "state": "idle",
+  "last_run": {
+    "id": "2099-01-02T06-00-00Z",
+    "started": "2099-01-02T06:00:00Z",
+    "finished": "2099-01-02T06:00:04Z",
+    "outcome": "succeeded",
+    "cost_usd": null,
+    "record": "runs/2099-01-02T06-00-00Z.json"
+  },
+  "waiting": [],
+  "rule_counts": [
+    { "rule": "pkg.malicious_package", "day": "2099-01-01", "severity_id": 5, "label": "test", "count": 1 },
+    { "rule": "pkg.vulnerable_package", "day": "2099-01-01", "severity_id": 3, "label": "none", "count": 2 },
+    { "rule": "pkg.vulnerable_package", "day": "2099-01-02", "severity_id": 3, "label": "benign", "count": 1 }
+  ]
+}
